@@ -1,4 +1,4 @@
-venv
+__pycache__
 ml-project
 results_demo
-aspect_sentiment_analysis/__pycache__
+venv
