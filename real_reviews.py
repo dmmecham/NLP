@@ -1,14 +1,20 @@
 from pipeline import AspectSentimentPipeline
+import kagglehub
 import pandas as pd
 
-# Assuming you have a CSV with columns: 'text', 'rating'
-# Download from: https://www.kaggle.com/datasets/cynthiarempel/amazon-us-customer-reviews-dataset
+print("Fetching Amazon Electronics reviews from Kaggle...")
+reviews_path = kagglehub.dataset_download(
+    "cynthiarempel/amazon-us-customer-reviews-dataset",
+    path="amazon_reviews_us_Electronics_v1_00.tsv",
+)
+print(f"Review data: {reviews_path}")
 
 pipeline = AspectSentimentPipeline(output_dir="results_electronics")
 
 # Run with real data
 pipeline.run_full_pipeline(
-    filepath="amazon_electronics_reviews.csv",
+    filepath=reviews_path,
+    use_demo=False,                   # Require the real data, never demo data
     num_topics=15,                    # Identify 15 aspects
     nrows=10000,                      # Use first 10k reviews
     sample_per_rating=1000,           # Balance by rating

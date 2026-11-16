@@ -11,6 +11,7 @@ It does not perform text preprocessing; that is handled separately by
 TextPreprocessor.
 """
 
+import csv
 from pathlib import Path
 from typing import Optional
 
@@ -74,12 +75,12 @@ class AmazonReviewsDataLoader:
         encoding: Optional[str] = None,
     ) -> pd.DataFrame:
         """
-        Load reviews from a CSV file and standardize the required columns.
+        Load reviews from a CSV or TSV file and standardize the required columns.
 
         Args:
-            filepath: Path to the source CSV.
+            filepath: Path to the source CSV or TSV.
             nrows: Optional maximum number of rows to read.
-            encoding: Optional CSV encoding. If omitted, pandas uses its
+            encoding: Optional file encoding. If omitted, pandas uses its
                 default encoding.
 
         Returns:
@@ -98,17 +99,19 @@ class AmazonReviewsDataLoader:
 
         if not filepath.is_file():
             raise FileNotFoundError(
-                f"Review CSV file not found: {filepath}"
+                f"Review data file not found: {filepath}"
             )
 
         read_options = {"nrows": nrows}
+        if filepath.suffix.lower() == ".tsv":
+            read_options.update(sep="\t", quoting=csv.QUOTE_NONE)
         if encoding is not None:
             read_options["encoding"] = encoding
 
         df = pd.read_csv(filepath, **read_options)
 
         if df.empty:
-            raise ValueError(f"The CSV file contains no rows: {filepath}")
+            raise ValueError(f"The review file contains no rows: {filepath}")
 
         text_column = cls._find_column(
             df,

@@ -4,7 +4,7 @@ Main pipeline orchestrator.
 Runs complete end-to-end analysis with both LDA and BERTopic.
 """
 
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 from pathlib import Path
 
 import numpy as np
@@ -620,7 +620,7 @@ class AspectSentimentPipeline:
     def run_full_pipeline(
         self,
         filepath: str = None,
-        use_demo: bool = True,
+        use_demo: Optional[bool] = None,
         num_topics: int = 10,
         nrows: int = None,
         sample_per_rating: int = None,
@@ -629,10 +629,16 @@ class AspectSentimentPipeline:
         """
         Run the complete pipeline end-to-end.
 
+        By default, use the provided CSV, or demo data if no path is given.
+        Set use_demo explicitly to override this selection.
+
         If optimize_lda is True, evaluate both LDA and BERTopic
         over the same topic-count range and select the best count
         for each model using U_Mass coherence.
         """
+        if use_demo is None:
+            use_demo = not bool(filepath)
+
         try:
             # Step 1: Load data.
             self.load_data(

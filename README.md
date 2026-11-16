@@ -99,16 +99,45 @@ pipeline.run_full_pipeline(use_demo=True, num_topics=5)
 
 ### Using Real Data
 
+`real_reviews.py` automatically downloads the Electronics TSV from
+[Amazon US Customer Reviews on Kaggle](https://www.kaggle.com/datasets/cynthiarempel/amazon-us-customer-reviews-dataset)
+using KaggleHub, which caches the file for subsequent runs. The file is
+approximately 1.7 GB, even though the script reads only its first 10,000
+rows and then samples up to 1,000 reviews per rating. Allow enough disk
+space and download time. Download errors are reported; the script never
+falls back to demo data.
+
+If Kaggle requires authentication or consent, accept the dataset's terms
+on its page and configure authentication as described in the
+[KaggleHub documentation](https://github.com/Kaggle/kagglehub#authenticate).
+In Colab, if running the script in a subprocess, expose your
+`KAGGLE_API_TOKEN` secret to that subprocess without printing it:
+
+```python
+import os
+from google.colab import userdata
+os.environ["KAGGLE_API_TOKEN"] = userdata.get("KAGGLE_API_TOKEN")
+```
+
+Do not put credentials in the notebook or repository.
+
+To use your own CSV or TSV instead:
+
 ```python
 pipeline = AspectSentimentPipeline(output_dir="results")
 pipeline.run_full_pipeline(
     filepath="path/to/amazon_reviews.csv",
+    use_demo=False,
     num_topics=10,
     nrows=5000,
     sample_per_rating=500,
     optimize_lda=True
 )
 ```
+
+When `use_demo` is omitted, `run_full_pipeline` uses the file if `filepath`
+is supplied; otherwise it uses demo data. Explicit `use_demo=True` selects
+demo data even if a path is supplied.
 
 ### Step-by-Step Usage
 
@@ -140,7 +169,7 @@ pipeline.generate_visualizations()
 
 ## Input Data Format
 
-CSV file with columns:
+CSV or TSV file with columns:
 - `text` (or `review_text`): Review text
 - `rating` (or `star_rating`): Rating from 1-5
 
