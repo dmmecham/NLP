@@ -67,8 +67,16 @@ class TextPreprocessor:
     @staticmethod
     def _ensure_nltk_resource(resource_path: str, package_name: str) -> None:
         """Download an NLTK resource if it is not already installed."""
+        def find_resource():
+            try:
+                nltk.data.find(resource_path)
+            except LookupError:
+                nltk.data.find(
+                    f"{resource_path}.zip/{resource_path.rsplit('/', 1)[-1]}/"
+                )
+
         try:
-            nltk.data.find(resource_path)
+            find_resource()
         except LookupError:
             downloaded = nltk.download(package_name, quiet=True)
 
@@ -80,7 +88,7 @@ class TextPreprocessor:
                 )
 
             try:
-                nltk.data.find(resource_path)
+                find_resource()
             except LookupError as exc:
                 raise RuntimeError(
                     f"NLTK resource '{package_name}' is still unavailable "

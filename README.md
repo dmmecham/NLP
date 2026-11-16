@@ -55,6 +55,17 @@ aspect_sentiment_analysis/
 pip install -r requirements.txt
 ```
 
+NLTK data is separate from the Python packages. On first use, the
+preprocessor downloads missing resources automatically. If that fails,
+install them manually with:
+
+```bash
+python -m nltk.downloader stopwords wordnet omw-1.4 punkt
+```
+
+NLTK can use these resources either extracted or in their downloaded ZIP
+archives.
+
 ## Quick Start
 
 ### Using Demo Data

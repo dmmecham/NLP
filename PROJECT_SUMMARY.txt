@@ -192,7 +192,7 @@ DEPENDENCIES & INSTALLATION
 PYTHON VERSION: 3.8+
 
 CORE DEPENDENCIES:
-  • numpy, pandas          - Data processing
+  • numpy, pandas         - Data processing
   • scikit-learn          - ML algorithms
   • nltk                  - NLP tools
   • gensim                - LDA topic modeling
