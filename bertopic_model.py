@@ -7,6 +7,7 @@ Uses contextual embeddings to identify semantically related topics.
 from typing import List, Dict, Tuple
 import numpy as np
 import pandas as pd
+import torch
 from sentence_transformers import SentenceTransformer
 from bertopic import BERTopic
 from sklearn.cluster import KMeans
@@ -37,6 +38,18 @@ class BERTopicModel:
         self.embeddings = None
         self.embedding_texts = None
         self.model = None
+        self._sentence_model = None
+
+    def _get_sentence_model(self):
+        if self._sentence_model is None:
+            device = "cuda" if torch.cuda.is_available() else None
+            self._sentence_model = SentenceTransformer(
+                self.embedding_model_name,
+                device=device
+            )
+            print(f"Sentence embedding device: {self._sentence_model.device}")
+
+        return self._sentence_model
 
     def generate_embeddings(self, texts: List[str]) -> np.ndarray:
         """Generate sentence embeddings for texts."""
@@ -47,9 +60,7 @@ class BERTopicModel:
             f"{self.embedding_model_name}..."
         )
 
-        sentence_model = SentenceTransformer(
-            self.embedding_model_name
-        )
+        sentence_model = self._get_sentence_model()
 
         self.embeddings = sentence_model.encode(
             texts,
@@ -109,7 +120,7 @@ class BERTopicModel:
         )
 
         self.model = BERTopic(
-            embedding_model=self.embedding_model_name,
+            embedding_model=self._get_sentence_model(),
             language=self.language,
             hdbscan_model=clustering_model,
             verbose=True

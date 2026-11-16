@@ -66,6 +66,26 @@ python -m nltk.downloader stopwords wordnet omw-1.4 punkt
 NLTK can use these resources either extracted or in their downloaded ZIP
 archives.
 
+### GPU usage
+
+BERTopic's sentence embeddings use CUDA automatically when PyTorch detects
+an NVIDIA GPU. Otherwise, Sentence Transformers selects an available device
+(including CPU). The selected embedding device is printed when the model
+loads and is reused for later topic predictions. LDA, preprocessing, UMAP,
+KMeans, and the remaining analysis run on the CPU.
+
+In Google Colab, choose **Runtime > Change runtime type > GPU**, then verify
+that PyTorch can see it:
+
+```python
+import torch
+print(torch.cuda.is_available())
+```
+
+If this prints `False`, check the Colab runtime and that the installed
+PyTorch build supports CUDA. The first run may also download the sentence
+transformer model.
+
 ## Quick Start
 
 ### Using Demo Data

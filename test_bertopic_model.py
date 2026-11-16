@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from bertopic import BERTopic
 from bertopic.backend import BaseEmbedder
+from sentence_transformers import SentenceTransformer, models
 
 from bertopic_model import BERTopicModel
 
@@ -44,9 +45,67 @@ class IdentityReducer:
 
 
 class BERTopicModelTest(unittest.TestCase):
+    def test_embedding_model_device_and_reuse(self):
+        for cuda_available, expected_device in ((True, "cuda"), (False, None)):
+            with self.subTest(cuda_available=cuda_available):
+                sentence_model = Mock()
+                sentence_model.device = expected_device or "cpu"
+                sentence_model.encode.return_value = EMBEDDINGS
+                topic_model = Mock()
+                topic_model.fit_transform.return_value = ([0] * len(TEXTS), None)
+
+                with patch(
+                    "bertopic_model.torch.cuda.is_available",
+                    return_value=cuda_available
+                ), patch(
+                    "bertopic_model.SentenceTransformer",
+                    return_value=sentence_model
+                ) as constructor, patch(
+                    "bertopic_model.BERTopic", return_value=topic_model
+                ) as bertopic:
+                    model = BERTopicModel()
+                    model.generate_embeddings(TEXTS)
+                    model.train(TEXTS, num_topics=2)
+                    model.train(TEXTS, num_topics=2)
+
+                constructor.assert_called_once_with(
+                    "all-MiniLM-L6-v2", device=expected_device
+                )
+                sentence_model.encode.assert_called_once_with(
+                    TEXTS, show_progress_bar=True
+                )
+                self.assertEqual(bertopic.call_count, 2)
+                for call in bertopic.call_args_list:
+                    self.assertIs(call.kwargs["embedding_model"], sentence_model)
+
+    def test_sentence_transformer_is_used_for_later_predictions(self):
+        encoder = SentenceTransformer(
+            modules=[models.BoW(vocab=[
+                "battery", "power", "charger", "charging",
+                "screen", "display", "glass"
+            ])],
+            device="cpu"
+        )
+
+        def create_bertopic(**kwargs):
+            kwargs["umap_model"] = IdentityReducer()
+            return BERTopic(**kwargs)
+
+        with patch(
+            "bertopic_model.torch.cuda.is_available", return_value=False
+        ), patch(
+            "bertopic_model.SentenceTransformer", return_value=encoder
+        ), patch("bertopic_model.BERTopic", side_effect=create_bertopic):
+            model = BERTopicModel()
+            topics, _ = model.train(TEXTS, num_topics=2)
+            for text, topic in zip(TEXTS, topics):
+                self.assertEqual(model.get_document_topics(text), {topic: 1.0})
+
     def test_kmeans_training_and_topic_assignments(self):
         model = BERTopicModel()
         model.embeddings = EMBEDDINGS
+        model.embedding_texts = TEXTS
+        model._sentence_model = TestEmbedder()
 
         def create_bertopic(**kwargs):
             kwargs["embedding_model"] = TestEmbedder()
