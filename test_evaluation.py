@@ -26,9 +26,10 @@ class ModelEvaluatorTest(unittest.TestCase):
             {"optimal_topics": 5, "dataset_stats": {}, "negative_drivers": pd.DataFrame()},
             {"num_topics": 5, "negative_drivers": pd.DataFrame()},
         )
-        self.assertIn("Coherence Score: N/A", report)
-        self.assertIn("LDA - Top Negative Driver: N/A", report)
-        self.assertIn("BERTopic - Top Negative Driver: N/A", report)
+        self.assertIn("LDA:\n  Topic Count: 5\n  Coherence: N/A", report)
+        self.assertIn("BERTopic:\n  Topic Count: 5\n  Coherence: N/A", report)
+        self.assertIn("LDA:\n  No negative-driver results available.", report)
+        self.assertIn("BERTopic:\n  No negative-driver results available.", report)
 
     def test_report_includes_coherence_and_drivers(self):
         drivers = pd.DataFrame([{"topic_id": 2, "keywords": "battery", "impact_score": 0.125}])
@@ -36,9 +37,9 @@ class ModelEvaluatorTest(unittest.TestCase):
             {"optimal_topics": 3, "best_coherence": -1.25, "negative_drivers": drivers},
             {"num_topics": 3, "negative_drivers": drivers},
         )
-        self.assertIn("Coherence Score: -1.2500", report)
-        self.assertIn("LDA - Top Negative Driver: Topic 2", report)
-        self.assertIn("BERTopic - Top Negative Driver: Topic 2", report)
+        self.assertIn("LDA:\n  Topic Count: 3\n  Coherence: -1.2500", report)
+        self.assertIn("LDA:\n  Topic 2: battery\n    Impact score: 0.1250", report)
+        self.assertIn("BERTopic:\n  Topic 2: battery\n    Impact score: 0.1250", report)
 
 
 if __name__ == "__main__":
